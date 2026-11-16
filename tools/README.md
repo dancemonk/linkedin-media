@@ -27,6 +27,12 @@ The case repos must sit next to `linkedin-media` (or set `REPOS_DIR`). Delete th
 | `folder` | Output folder in this repo, `YYYY-MM-topic` |
 | `rebuild` | Optional. `true` forces one rebuild of an existing folder |
 | `accent` | One accent color per series (malware `#F5B83D`, SIEM `#5EC8E5`) |
+| `style` | `terminal` for the terminal look (prompt bar, `$ command` labels, screenshots in a terminal window). Leave it out for the original style. |
+| `prompt` | Terminal style: the folder shown in `vlad@soc:~/<prompt>$` |
+| `title` | Title saved inside the PDF |
+| slide `ascii` | Cover only, terminal style: a short word shown as an ASCII banner |
+| slide `cmd` | Terminal style: the `$ ...` label above a slide title |
+| slide `window` | Terminal style: the label in the screenshot window bar |
 | `series`, `footer` | Small label at the top, name and repo at the bottom |
 | `base_dir` | Screenshot folder, starting with the case repo name (for example `siem-splunk-lab`) |
 | `slides[]` | `cover`, `step` (default), `text` or `end` |

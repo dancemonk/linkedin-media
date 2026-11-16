@@ -10,9 +10,13 @@ Spec format:
   "series": "Malware traffic analysis",
   "footer": "Vlad Guliakin  ·  github.com/dancemonk/...",
   "base_dir": "/path/screenshots/are/relative/to",
+  "style": "terminal",           (optional; default "classic")
+  "title": "PDF document title",  (optional)
+  "prompt": "malware",            (terminal style: vlad@soc:~/<prompt>$ <series>)
   "slides": [
-    {"type": "cover", "kicker": "...", "title": "...", "sub": "..."},
-    {"type": "step", "title": "...", "body": ["line", "line"], "image": "rel/path.png", "caption": "..."},
+    {"type": "cover", "kicker": "...", "title": "...", "sub": "...", "ascii": "SCOPE"},
+    {"type": "step", "cmd": "statistics → conversations", "title": "...", "body": ["line"],
+     "image": "rel/path.png", "window": "wireshark · conversations", "caption": "..."},
     {"type": "text", "title": "...", "bullets": ["...", "..."]},
     {"type": "end", "title": "...", "body": ["..."], "link": "github.com/..."}
   ]
@@ -97,19 +101,70 @@ li:before { content: ''; position: absolute; left: 0; top: 17px; width: 16px; he
 """
 
 
+TERM_CSS = """
+.mono, .top, .foot, .cmd, .cover .kicker, .cover .swipe, .caption { font-family: 'DejaVu Sans Mono', monospace }
+.top { font-size: 22px; letter-spacing: 0; color: #8B939C }
+.top .who { color: var(--accent) }
+.cmd { color: var(--accent); font-size: 26px; margin-bottom: 18px }
+.foot { font-size: 20px }
+.frame { background: #0D1014; padding: 0; border-radius: 14px; box-shadow: 0 0 0 2px #2A2F36; flex-direction: column; align-items: stretch }
+.frame .tb { height: 44px; flex: none; display: flex; align-items: center; gap: 10px; padding: 0 18px; border-bottom: 2px solid #2A2F36; font: 19px 'DejaVu Sans Mono', monospace; color: #6E7781 }
+.frame .tb i { width: 13px; height: 13px; border-radius: 50%; background: #2F353D }
+.frame .tb span { margin-left: 8px }
+.frame .pic { background: #FFFFFF; padding: 10px; min-height: 0; display: flex }
+li:before { content: '>'; background: none; width: auto; height: auto; top: 0; color: var(--accent); font: 30px/1.38 'DejaVu Sans Mono', monospace }
+.cover pre { font-family: 'DejaVu Sans Mono', monospace; color: var(--accent); line-height: 1.0; margin-bottom: 44px }
+.cover .kicker { text-transform: none; letter-spacing: 0; font-weight: 400; font-size: 28px }
+.cover .swipe { font-weight: 400 }
+.top { position: absolute; top: 84px; left: 80px; right: 80px; margin: 0 }
+.slide { padding-top: 190px; padding-bottom: 140px }
+.slide > .foot { position: absolute; left: 80px; right: 80px; bottom: 0; margin: 0 }
+.slide.text, .slide.end { justify-content: center }
+.slide.text .sp, .slide.end .sp { display: none }
+.slide.text h1, .slide.end h1 { font-size: 68px; margin-bottom: 40px }
+.slide.text li { font-size: 38px; margin-bottom: 30px }
+.slide.end .body p { font-size: 38px }
+.slide.end .link { font-size: 32px; margin-top: 40px }
+.slide.step .shot { justify-content: flex-start; margin-top: 44px }
+"""
+
+
+def ascii_banner(text):
+    import pyfiglet
+    art = pyfiglet.figlet_format(text, font="ansi_shadow").rstrip("\n")
+    cols = max(len(l) for l in art.splitlines())
+    fs = min(34, 920 / (cols * 0.602))
+    return f'<pre style="font-size:{fs:.1f}px">{html.escape(art)}</pre>'
+
+
 def page(spec, s, i, n):
     acc = spec.get("accent", "#F5B83D")
-    top = (f'<div class="top"><span class="series">{inline(spec["series"])}</span>'
-           f'<span>{i}/{n}</span></div>')
+    term = spec.get("style") == "terminal"
+    if term:
+        top = (f'<div class="top"><span><span class="who">vlad@soc</span>:~/{html.escape(spec.get("prompt", ""))}$ '
+               f'{inline(spec["series"])}</span><span>{i:02d}/{n:02d}</span></div>')
+    else:
+        top = (f'<div class="top"><span class="series">{inline(spec["series"])}</span>'
+               f'<span>{i}/{n}</span></div>')
     foot = f'<div class="foot"><span>{inline(spec["footer"])}</span></div>'
     t = s.get("type", "step")
     if t == "cover":
-        inner = (f'<div class="slide cover"><div class="bar"></div>'
+        if term:
+            inner = (f'<div class="slide cover">' + top.replace('class="top"', 'class="top" style="position:absolute;top:84px;left:80px;right:80px"') +
+                     (ascii_banner(s["ascii"]) if s.get("ascii") else '<div class="bar"></div>') +
+                     f'<div class="kicker">$ {inline(s.get("kicker", ""))}</div>'
+                     f'<h1>{inline(s["title"])}</h1><div class="sub">{inline(s.get("sub", ""))}</div>'
+                     f'<div class="swipe">swipe &rarr;</div>{foot}</div>')
+        else:
+          inner = (f'<div class="slide cover"><div class="bar"></div>'
                  f'<div class="kicker">{inline(s.get("kicker", ""))}</div>'
                  f'<h1>{inline(s["title"])}</h1><div class="sub">{inline(s.get("sub", ""))}</div>'
                  f'<div class="swipe">Swipe &rarr;</div>{foot}</div>')
     else:
-        parts = [f'<div class="slide {t}">', top, f'<h1>{inline(s["title"])}</h1>']
+        parts = [f'<div class="slide {t}">', top]
+        if s.get("cmd"):
+            parts.append(f'<div class="cmd">$ {inline(s["cmd"])}</div>')
+        parts.append(f'<h1>{inline(s["title"])}</h1>')
         if s.get("body"):
             parts.append('<div class="body">' + "".join(f"<p>{inline(p)}</p>" for p in s["body"]) + "</div>")
         if s.get("bullets"):
@@ -126,12 +181,18 @@ def page(spec, s, i, n):
                 base = pathlib.Path(repos) / base
             src = img_data(base / s["image"], s.get("crops"))
             cap = f'<div class="caption">{inline(s["caption"])}</div>' if s.get("caption") else ""
-            parts.append(f'<div class="shot"><div class="frame"><img src="{src}"></div>{cap}</div>')
+            if term:
+                tb = f'<div class="tb"><i></i><i></i><i></i><span>{html.escape(s.get("window", ""))}</span></div>'
+                parts.append(f'<div class="shot"><div class="frame">{tb}<div class="pic"><img src="{src}"></div></div>{cap}</div>')
+            else:
+                parts.append(f'<div class="shot"><div class="frame"><img src="{src}"></div>{cap}</div>')
         else:
-            parts.append('<div style="flex:1"></div>')
+            parts.append('<div class="sp" style="flex:1"></div>')
         parts.append(foot + "</div>")
         inner = "".join(parts)
-    return f"<!doctype html><html><head><meta charset='utf-8'><style>:root{{--accent:{acc}}}{CSS}</style></head><body>{inner}</body></html>"
+    title = html.escape(spec.get("title") or spec["name"])
+    css = CSS + (TERM_CSS if term else "")
+    return f"<!doctype html><html><head><meta charset='utf-8'><title>{title}</title><style>:root{{--accent:{acc}}}{css}</style></head><body>{inner}</body></html>"
 
 
 def main(spec_path, out_dir):
