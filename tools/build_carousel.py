@@ -66,7 +66,7 @@ def inline(text):
     t = "".join(out)
     while "**" in t:
         t = t.replace("**", "<b>", 1).replace("**", "</b>", 1)
-    return t
+    return t.replace("\n", "<br>")
 
 
 CSS = """

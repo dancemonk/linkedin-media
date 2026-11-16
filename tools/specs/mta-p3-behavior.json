@@ -1,0 +1,157 @@
+{
+  "name": "mta-p3-behavior",
+  "folder": "2026-12-mta-p3-behavior",
+  "title": "Malware traffic analysis, Part 3: pivot on behavior",
+  "style": "terminal",
+  "prompt": "malware",
+  "accent": "#F5B83D",
+  "series": "part 3/4",
+  "footer": "Vlad Guliakin · github.com/dancemonk/malware-traffic-analysis",
+  "base_dir": "malware-traffic-analysis/2026-08-09-first-to-last/screenshots",
+  "slides": [
+    {
+      "type": "cover",
+      "ascii": "C2",
+      "kicker": "first to last · formbook/xloader",
+      "title": "Random paths, fixed rhythm: how 6 alert IPs became 15 domains.",
+      "sub": "I stopped following the alert IPs and followed the host's behavior instead."
+    },
+    {
+      "type": "step",
+      "cmd": "http.request.uri matches \"^/[a-z0-9]{4}/\"",
+      "title": "One regex found all 131 requests.",
+      "body": [
+        "Each domain got its own random four-character path, like `/irpw/`."
+      ],
+      "image": "09-c2-overview.png",
+      "crops": [
+        [
+          0,
+          0,
+          590,
+          26
+        ],
+        [
+          450,
+          26,
+          1015,
+          300
+        ],
+        [
+          0,
+          456,
+          280,
+          484
+        ]
+      ],
+      "window": "wireshark · c2 pattern",
+      "caption": "Displayed: 131. 15 domains between 02:13:23 and 02:21:07 UTC."
+    },
+    {
+      "type": "step",
+      "cmd": "ip.addr == 146.59.71.167 && http",
+      "title": "A new domain about every 24 seconds.",
+      "body": [
+        "Inside one domain: about 2.5 s between requests. Then a 358.7 s gap before the second round."
+      ],
+      "image": "10-c2-cycle.png",
+      "crops": [
+        [
+          0,
+          0,
+          265,
+          26
+        ],
+        [
+          560,
+          36,
+          900,
+          345
+        ]
+      ],
+      "window": "wireshark · one domain, time delta",
+      "caption": "www.grinswakebthu[.]info (146.59.71[.]167): seven POSTs and one GET, then the next domain."
+    },
+    {
+      "type": "step",
+      "cmd": "follow http stream",
+      "title": "The GET check-in got 404 Not Found.",
+      "body": [
+        "It carries an encoded `2kn1=` parameter. Most servers replied 404, with one exception (Part 4)."
+      ],
+      "image": "11-get-checkin.png",
+      "crops": [
+        [
+          0,
+          10,
+          420,
+          52
+        ],
+        [
+          0,
+          165,
+          230,
+          192
+        ]
+      ],
+      "window": "wireshark · http stream",
+      "caption": "Frame 11714: GET /irpw/?2kn1=… and the 404 reply."
+    },
+    {
+      "type": "step",
+      "cmd": "http.host == \"www.grinswakebthu.info\"",
+      "title": "After about 6 min 18 s, it started the list again.",
+      "body": [
+        "Two domains were contacted twice. www.grinswakebthu[.]info had identical request sizes both times."
+      ],
+      "image": "17-beacon-return.png",
+      "crops": [
+        [
+          0,
+          0,
+          300,
+          26
+        ],
+        [
+          450,
+          36,
+          745,
+          315
+        ]
+      ],
+      "window": "wireshark · second round",
+      "caption": "Same seven POSTs and one GET to www.grinswakebthu[.]info, at 02:14 and 02:20 UTC."
+    },
+    {
+      "type": "text",
+      "cmd": "cat scope.md",
+      "title": "6 in the alerts, 9 more by behavior",
+      "bullets": [
+        "The six alert IPs covered six of the 15 domains.",
+        "The other nine followed the same pattern but were not in the alerts.",
+        "All 131 requests used HTTP on port 80. No unusual ports.",
+        "The same 131 requests also had a fake User-Agent string. That one is my Dec 4 post."
+      ]
+    },
+    {
+      "type": "text",
+      "cmd": "cat cheatsheet.txt",
+      "title": "Cheat sheet: pivot from alerts to behavior",
+      "bullets": [
+        "C2 path pattern:\n`http.request && ip.src == <host> &&`\n`http.request.uri matches \"^/[a-z0-9]{4}/\"`",
+        "One domain's rhythm: `ip.addr == <c2 ip> && http`, plus a \"Time delta from previous displayed frame\" column",
+        "Same traffic, second method: `ip.src == <host> && http.user_agent contains \"<string>\"`",
+        "Both filters picked the same 131 requests, so the User-Agent is hardcoded in the malware."
+      ]
+    },
+    {
+      "type": "end",
+      "cmd": "next",
+      "title": "Part 4: what it sent, and the decoy",
+      "body": [
+        "283,087 bytes per domain visit, sent to 14 domains, and one real news site in the list."
+      ],
+      "link": "github.com/dancemonk/malware-traffic-analysis"
+    }
+  ]
+}

@@ -33,6 +33,7 @@ The case repos must sit next to `linkedin-media` (or set `REPOS_DIR`). Delete th
 | slide `ascii` | Cover only, terminal style: a short word shown as an ASCII banner |
 | slide `cmd` | Terminal style: the `$ ...` label above a slide title |
 | slide `window` | Terminal style: the label in the screenshot window bar |
+| `\n` in any text | Forces a line break. Use it so long filters break at a space you choose, never inside a regex. |
 | `series`, `footer` | Small label at the top, name and repo at the bottom |
 | `base_dir` | Screenshot folder, starting with the case repo name (for example `siem-splunk-lab`) |
 | `slides[]` | `cover`, `step` (default), `text` or `end` |
