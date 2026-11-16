@@ -1,0 +1,152 @@
+{
+  "name": "mta-p2-user",
+  "folder": "2026-12-mta-p2-user",
+  "title": "Malware traffic analysis, Part 2: who is the user",
+  "style": "terminal",
+  "prompt": "malware",
+  "accent": "#F5B83D",
+  "series": "part 2/4",
+  "footer": "Vlad Guliakin · github.com/dancemonk/malware-traffic-analysis",
+  "base_dir": "malware-traffic-analysis/2026-08-09-first-to-last/screenshots",
+  "slides": [
+    {
+      "type": "cover",
+      "ascii": "WHO",
+      "kicker": "first to last · formbook/xloader",
+      "title": "The alerts gave me an IP address. The ticket needed a person.",
+      "sub": "Host name, MAC, user and full name from one exercise pcap, each checked in a second protocol where I could."
+    },
+    {
+      "type": "step",
+      "cmd": "dhcp",
+      "title": "DHCP gave the host name and MAC.",
+      "body": [
+        "Frame 1830, DHCP Request: option 12 host name, option 50 requested IP, option 61 MAC."
+      ],
+      "image": "03-dhcp-host.png",
+      "crops": [
+        [
+          0,
+          0,
+          370,
+          26
+        ],
+        [
+          0,
+          208,
+          570,
+          352
+        ]
+      ],
+      "window": "wireshark · dhcp request",
+      "caption": "DESKTOP-5NLV63K asked for 172.16.8[.]49 at 02:08:12 UTC."
+    },
+    {
+      "type": "step",
+      "cmd": "kerberos",
+      "title": "Kerberos named the user.",
+      "body": [
+        "Computer accounts end in $, so I filtered them out."
+      ],
+      "image": "04-kerberos-user.png",
+      "crops": [
+        [
+          0,
+          0,
+          640,
+          26
+        ],
+        [
+          0,
+          398,
+          420,
+          651
+        ]
+      ],
+      "window": "wireshark · kerberos as-rep",
+      "caption": "Frame 2816: AS-REP for rvance in FIRSTTOLAST.TECH."
+    },
+    {
+      "type": "step",
+      "cmd": "kerberos",
+      "title": "Kerberos also confirmed the host name.",
+      "image": "05-kerberos-host.png",
+      "crops": [
+        [
+          0,
+          0,
+          500,
+          26
+        ],
+        [
+          0,
+          606,
+          480,
+          695
+        ]
+      ],
+      "window": "wireshark · kerberos tgs-rep",
+      "caption": "Frame 2698: TGS-REP for the computer account DESKTOP-5NLV63K$."
+    },
+    {
+      "type": "step",
+      "cmd": "samr",
+      "title": "SAMR gave the full name.",
+      "image": "06-fullname.png",
+      "crops": [
+        [
+          0,
+          0,
+          520,
+          26
+        ],
+        [
+          100,
+          447,
+          360,
+          470
+        ],
+        [
+          100,
+          620,
+          400,
+          640
+        ]
+      ],
+      "window": "wireshark · samr queryuserinfo",
+      "caption": "Frame 2947: account rvance, full name Raymond Vance."
+    },
+    {
+      "type": "text",
+      "cmd": "cat victim.md",
+      "title": "Each fact, checked twice where I could",
+      "bullets": [
+        "IP: DHCP (frame 1830) and Kerberos AS-REP (2816)",
+        "MAC: DHCP option 61 and the Ethernet header (2816)",
+        "Host: DHCP option 12 and Kerberos `DESKTOP-5NLV63K$` (2698)",
+        "User: Kerberos AS-REP (2816) and SAMR (2947)",
+        "Full name: SAMR only. One source, and I wrote that down."
+      ]
+    },
+    {
+      "type": "text",
+      "cmd": "cat cheatsheet.txt",
+      "title": "Cheat sheet: who is behind an IP",
+      "bullets": [
+        "Host, IP, MAC: `dhcp.option.hostname == \"<host>\"`, then read options 12, 50 and 61",
+        "User: `kerberos.CNameString && ip.addr == <ip> && !(kerberos.CNameString contains \"$\")`",
+        "Full name: `samr && ip.addr == <ip> && _ws.col.info contains \"QueryUserInfo\"`",
+        "Check each fact in a second protocol. Note the ones you can't."
+      ]
+    },
+    {
+      "type": "end",
+      "cmd": "next",
+      "title": "Part 3: the C2 behavior",
+      "body": [
+        "131 requests to 15 domains, and the pattern that tied them together."
+      ],
+      "link": "github.com/dancemonk/malware-traffic-analysis"
+    }
+  ]
+}

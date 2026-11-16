@@ -1,0 +1,131 @@
+{
+  "name": "splunk-p1-getting-in",
+  "folder": "2026-12-splunk-p1-getting-in",
+  "title": "Splunk Case 01, Part 1: how the attacker got in",
+  "style": "terminal",
+  "prompt": "siem",
+  "accent": "#5EC8E5",
+  "series": "part 1/4",
+  "footer": "Vlad Guliakin · github.com/dancemonk/siem-splunk-lab",
+  "base_dir": "siem-splunk-lab/cases/01-bots-v1/exhibits",
+  "slides": [
+    {
+      "type": "cover",
+      "ascii": "BRUTE",
+      "kicker": "case 01 · boss of the soc v1",
+      "title": "412 passwords. One of them worked: batman.",
+      "sub": "How the attacker got into the website's admin page, traced in Splunk on the Boss of the SOC v1 practice dataset."
+    },
+    {
+      "type": "text",
+      "cmd": "stats count by src_ip, http_user_agent",
+      "title": "Two IPs did most of the talking",
+      "bullets": [
+        "40.80.148[.]42: 17,483 requests from 21:36:45. Test strings marked `acunetix_wvs_security_test`: the Acunetix scanner.",
+        "23.22.63[.]114: 1,235 requests with User-Agent `Python-urllib/2.7`: a Python script."
+      ]
+    },
+    {
+      "type": "text",
+      "cmd": "stats count by http_method, uri_path",
+      "title": "The script hit one page only",
+      "bullets": [
+        "All 1,235 requests went to `/joomla/administrator/index.php`, the Joomla admin login.",
+        "823 GET and 412 POST: the login form was sent 412 times.",
+        "That is a brute force. It still doesn't tell me if a password worked."
+      ]
+    },
+    {
+      "type": "step",
+      "cmd": "table _time form_data",
+      "title": "412 POSTs, all for the user admin",
+      "image": "w05-bruteforce-passwords-hl.png",
+      "crops": [
+        [
+          20,
+          315,
+          230,
+          362
+        ],
+        [
+          400,
+          610,
+          1000,
+          900
+        ]
+      ],
+      "window": "splunk · stream:http",
+      "caption": "412 events, and every POST sends username=admin, each with a different password from a wordlist."
+    },
+    {
+      "type": "step",
+      "cmd": "rex passwd | where count > 1",
+      "title": "Only one password was sent twice: batman.",
+      "body": [
+        "Across all 14,238 POSTs, by both IPs. The query is on the cheat slide."
+      ],
+      "image": "w06b-password-reused-hl.png",
+      "crops": [
+        [
+          0,
+          535,
+          700,
+          700
+        ],
+        [
+          1100,
+          535,
+          1600,
+          700
+        ]
+      ],
+      "window": "splunk · password reuse",
+      "caption": "batman: count 2, from 23.22.63[.]114 and 40.80.148[.]42."
+    },
+    {
+      "type": "step",
+      "cmd": "where password=\"batman\"",
+      "title": "The script found it. A browser used it 1 min 32 s later.",
+      "body": [
+        "21:46:33 the Python script, 21:48:05 Internet Explorer 11 from the scanner IP. Both got status 303, so 303 alone doesn't prove the login worked."
+      ],
+      "image": "w07-batman-time-order-hl.png",
+      "crops": [
+        [
+          0,
+          585,
+          900,
+          770
+        ],
+        [
+          1800,
+          585,
+          2054,
+          770
+        ]
+      ],
+      "window": "splunk · time order",
+      "caption": "One attacker, two IPs, two tools."
+    },
+    {
+      "type": "text",
+      "cmd": "cat cheatsheet.spl",
+      "title": "Cheat sheet: spot a web brute force in Splunk",
+      "bullets": [
+        "Who talks most, and as what: `| stats count by src_ip, http_user_agent | sort - count`",
+        "What one IP hit: `src_ip=<ip> | stats count by http_method, uri_path`",
+        "A password sent twice: `http_method=POST | rex field=form_data \"passwd=(?<password>[^&]+)\" | stats count, values(src_ip) by password | where count > 1`",
+        "Status 303 is a redirect, not proof of a login. Check what the IP did next."
+      ]
+    },
+    {
+      "type": "end",
+      "cmd": "next",
+      "title": "Part 2: the foothold",
+      "body": [
+        "The admin session, the web shell upload, and the firewall that only watched."
+      ],
+      "link": "github.com/dancemonk/siem-splunk-lab"
+    }
+  ]
+}
