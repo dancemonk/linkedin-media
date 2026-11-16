@@ -1,105 +1,104 @@
 {
-  "name": "mta-p1-scoping",
-  "folder": "2026-11-mta-p1-scoping",
-  "title": "Malware traffic analysis, Part 1: scoping 6 IDS alerts",
-  "style": "terminal",
-  "prompt": "malware",
-  "accent": "#F5B83D",
-  "series": "part 1/4",
-  "footer": "Vlad Guliakin · github.com/dancemonk/malware-traffic-analysis",
-  "base_dir": "malware-traffic-analysis/2026-08-09-first-to-last/screenshots",
-  "slides": [
-    {
-      "type": "cover",
-      "ascii": "SCOPE",
-      "kicker": "first to last · formbook/xloader",
-      "title": "6 IDS alerts. One host behind all of them.",
-      "sub": "Before I chased a single domain, I checked what the alerts actually cover."
-    },
-    {
-      "type": "text",
-      "cmd": "cat alerts.txt",
-      "title": "What I started with",
-      "bullets": [
-        "6+ alerts: `ET MALWARE FormBook CnC Checkin (GET)`",
-        "02:13 to 02:16 UTC, six IPs, all on port 80",
-        "A 14-minute pcap, 22,473 packets"
-      ]
-    },
-    {
-      "type": "step",
-      "cmd": "statistics → conversations → ipv4",
-      "title": "All six alerted IPs talked to one client.",
-      "body": [
-        "Filter on the six alert IPs, then Conversations with \"Limit to display filter\"."
-      ],
-      "image": "01-alert-scope.png",
-      "crops": [
-        [
-          0,
-          0,
-          375,
-          180
-        ]
-      ],
-      "window": "wireshark · conversations",
-      "caption": "Every conversation involves 172.16.8[.]49."
-    },
-    {
-      "type": "step",
-      "cmd": "proof by zero",
-      "title": "Then I removed that host from the filter.",
-      "body": [
-        "Same filter, plus `!(ip.addr == 172.16.8.49)`."
-      ],
-      "image": "02-proof-zero.png",
-      "crops": [
-        [
-          560,
-          0,
-          945,
-          27
-        ],
-        [
-          300,
-          55,
-          620,
-          85
-        ]
-      ],
-      "window": "wireshark · filter and status bar",
-      "caption": "Displayed: 0. No other internal host talked to the alerted IPs."
-    },
-    {
-      "type": "text",
-      "cmd": "cat scope.md",
-      "title": "What the scope looked like",
-      "bullets": [
-        "One client: 172.16.8[.]49, on TCP port 80",
-        "Windows Update to `download.windowsupdate.com` checked and excluded as benign",
-        "The alerts showed 6 IPs. The capture had 15 domains with the same C2 pattern."
-      ]
-    },
-    {
-      "type": "text",
-      "cmd": "cat cheatsheet.txt",
-      "title": "Cheat sheet: scope alerts in Wireshark",
-      "bullets": [
-        "Only the alerted IPs: `ip.addr in {<alert IPs>}`",
-        "Who talked to them: Statistics → Conversations → IPv4, with \"Limit to display filter\"",
-        "Proof by zero: add `&& !(ip.addr == <host>)`. Expect Displayed: 0",
-        "Check known-good traffic (here: Windows Update) and exclude it before you go on"
-      ]
-    },
-    {
-      "type": "end",
-      "cmd": "next",
-      "title": "Part 2: who is the user?",
-      "body": [
-        "DHCP, Kerberos and SAMR. Each fact checked in a second protocol."
-      ],
-      "link": "github.com/dancemonk/malware-traffic-analysis"
-    }
-  ],
-  "rebuild": true
+ "name": "mta-p1-scoping",
+ "folder": "2026-11-mta-p1-scoping",
+ "title": "Malware traffic analysis, Part 1: scoping 6 IDS alerts",
+ "style": "terminal",
+ "prompt": "malware",
+ "accent": "#F5B83D",
+ "series": "part 1/4",
+ "footer": "Vlad Guliakin · github.com/dancemonk/malware-traffic-analysis",
+ "base_dir": "malware-traffic-analysis/2026-08-09-first-to-last/screenshots",
+ "slides": [
+  {
+   "type": "cover",
+   "ascii": "SCOPE",
+   "kicker": "first to last · formbook/xloader",
+   "title": "6 IDS alerts. One host behind all of them.",
+   "sub": "Before I chased a single domain, I checked what the alerts actually cover."
+  },
+  {
+   "type": "text",
+   "cmd": "cat alerts.txt",
+   "title": "What I started with",
+   "bullets": [
+    "6+ alerts: `ET MALWARE FormBook CnC Checkin (GET)`",
+    "02:13 to 02:16 UTC, six IPs, all on port 80",
+    "A 14-minute pcap, 22,473 packets"
+   ]
+  },
+  {
+   "type": "step",
+   "cmd": "statistics → conversations → ipv4",
+   "title": "All six alerted IPs talked to one client.",
+   "body": [
+    "Filter on the six alert IPs, then Conversations with \"Limit to display filter\"."
+   ],
+   "image": "01-alert-scope.png",
+   "crops": [
+    [
+     0,
+     0,
+     375,
+     180
+    ]
+   ],
+   "window": "wireshark · conversations",
+   "caption": "Every conversation involves 172.16.8[.]49."
+  },
+  {
+   "type": "step",
+   "cmd": "proof by zero",
+   "title": "Then I removed that host from the filter.",
+   "body": [
+    "Same filter, plus `!(ip.addr == 172.16.8.49)`."
+   ],
+   "image": "02-proof-zero.png",
+   "crops": [
+    [
+     560,
+     0,
+     945,
+     27
+    ],
+    [
+     300,
+     55,
+     620,
+     85
+    ]
+   ],
+   "window": "wireshark · filter and status bar",
+   "caption": "Displayed: 0. No other internal host talked to the alerted IPs."
+  },
+  {
+   "type": "text",
+   "cmd": "cat scope.md",
+   "title": "What the scope looked like",
+   "bullets": [
+    "One client: 172.16.8[.]49, on TCP port 80",
+    "Windows Update to `download.windowsupdate.com` checked and excluded as benign",
+    "The alerts showed 6 IPs. The capture had 15 domains with the same C2 pattern."
+   ]
+  },
+  {
+   "type": "text",
+   "cmd": "cat cheatsheet.txt",
+   "title": "Cheat sheet: scope alerts in Wireshark",
+   "bullets": [
+    "Only the alerted IPs: `ip.addr in {<alert IPs>}`",
+    "Who talked to them: Statistics → Conversations → IPv4, with \"Limit to display filter\"",
+    "Proof by zero: add `&& !(ip.addr == <host>)`. Expect Displayed: 0",
+    "Check known-good traffic (here: Windows Update) and exclude it before you go on"
+   ]
+  },
+  {
+   "type": "end",
+   "cmd": "next",
+   "title": "Part 2: who is the user?",
+   "body": [
+    "DHCP, Kerberos and SAMR. Each fact checked in a second protocol."
+   ],
+   "link": "github.com/dancemonk/malware-traffic-analysis"
+  }
+ ]
 }
