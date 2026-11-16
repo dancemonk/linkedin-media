@@ -1,13 +1,14 @@
 {
  "name": "splunk-case01-bots-v1",
+ "folder": "2026-12-splunk-case01",
  "accent": "#5EC8E5",
- "series": "SIEM \u00b7 Splunk \u00b7 BOTS v1",
- "footer": "Vlad Guliakin  \u00b7  github.com/dancemonk/siem-splunk-lab",
+ "series": "SIEM · Splunk · BOTS v1",
+ "footer": "Vlad Guliakin  ·  github.com/dancemonk/siem-splunk-lab",
  "base_dir": "siem-splunk-lab",
  "slides": [
   {
    "type": "cover",
-   "kicker": "Case 01 \u00b7 Boss of the SOC v1",
+   "kicker": "Case 01 · Boss of the SOC v1",
    "title": "A defaced website. 45 minutes. I traced each step in Splunk.",
    "sub": "Web, Sysmon, Windows and firewall logs in one timeline. Then a detection for the next one."
   },

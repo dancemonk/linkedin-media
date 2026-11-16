@@ -1,13 +1,14 @@
 {
  "name": "mta-first-to-last",
+ "folder": "2026-11-mta-first-to-last",
  "accent": "#F5B83D",
  "series": "Malware traffic analysis",
- "footer": "Vlad Guliakin  \u00b7  github.com/dancemonk/malware-traffic-analysis",
+ "footer": "Vlad Guliakin  ·  github.com/dancemonk/malware-traffic-analysis",
  "base_dir": "malware-traffic-analysis/2026-08-09-first-to-last/screenshots",
  "slides": [
   {
    "type": "cover",
-   "kicker": "Case: First to Last \u00b7 FormBook/XLoader",
+   "kicker": "Case: First to Last · FormBook/XLoader",
    "title": "The IDS flagged 6 servers. The pcap had 15 domains.",
    "sub": "How I scoped an infection from one 14-minute packet capture in Wireshark."
   },
@@ -18,7 +19,7 @@
     "First question: which internal host talked to them?"
    ],
    "image": "01-alert-scope.png",
-   "caption": "Statistics \u2192 Conversations, limited to the six alerted IPs. Every row is 172.16.8[.]49.",
+   "caption": "Statistics → Conversations, limited to the six alerted IPs. Every row is 172.16.8[.]49.",
    "crops": [
     [
      0,
@@ -48,9 +49,9 @@
   {
    "title": "Who uses the host",
    "bullets": [
-    "**DHCP** \u2192 host name DESKTOP-5NLV63K and MAC",
-    "**Kerberos** \u2192 user account rvance",
-    "**SAMR** \u2192 full name Raymond Vance",
+    "**DHCP** → host name DESKTOP-5NLV63K and MAC",
+    "**Kerberos** → user account rvance",
+    "**SAMR** → full name Raymond Vance",
     "Each fact checked in a second protocol"
    ],
    "image": "04-kerberos-user.png",

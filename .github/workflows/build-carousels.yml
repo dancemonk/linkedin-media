@@ -1,0 +1,102 @@
+name: Build carousels
+
+# Builds a LinkedIn carousel for every spec in tools/specs/ whose output
+# folder has no carousel.pdf yet (or that sets "rebuild": true).
+# Output: <folder>/carousel.pdf and <folder>/cover.png, served by GitHub Pages.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "tools/specs/**.json"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+
+concurrency:
+  group: build-carousels
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Find specs that need a build
+        id: todo
+        run: |
+          python3 - <<'EOF' >> "$GITHUB_OUTPUT"
+          import json, pathlib
+          todo, repos = [], set()
+          for p in sorted(pathlib.Path("tools/specs").glob("*.json")):
+              s = json.loads(p.read_text())
+              folder = s.get("folder")
+              if not folder:
+                  continue
+              if s.get("rebuild") or not (pathlib.Path(folder) / "carousel.pdf").exists():
+                  todo.append(str(p))
+                  repos.add(s["base_dir"].split("/")[0])
+          print("specs=" + " ".join(todo))
+          print("repos=" + " ".join(sorted(repos)))
+          EOF
+          cat "$GITHUB_OUTPUT"
+
+      - name: Get the case repos (public, read only)
+        if: steps.todo.outputs.specs != ''
+        run: |
+          mkdir -p "$RUNNER_TEMP/repos"
+          for r in ${{ steps.todo.outputs.repos }}; do
+            git clone --depth 1 "https://github.com/${{ github.repository_owner }}/$r" "$RUNNER_TEMP/repos/$r"
+          done
+
+      - name: Set up Python, Chromium and fonts
+        if: steps.todo.outputs.specs != ''
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq fonts-inter fonts-dejavu-core
+          pip install --quiet playwright pillow
+          python -m playwright install --with-deps chromium
+
+      - name: Build
+        if: steps.todo.outputs.specs != ''
+        env:
+          REPOS_DIR: ${{ runner.temp }}/repos
+        run: |
+          set -e
+          for spec in ${{ steps.todo.outputs.specs }}; do
+            name=$(python3 -c "import json,sys;print(json.load(open(sys.argv[1]))['name'])" "$spec")
+            folder=$(python3 -c "import json,sys;print(json.load(open(sys.argv[1]))['folder'])" "$spec")
+            out="$RUNNER_TEMP/out/$name"
+            python tools/build_carousel.py "$spec" "$out" 2>&1 | tee "$RUNNER_TEMP/$name.log"
+            if grep -q "WARNING" "$RUNNER_TEMP/$name.log"; then
+              echo "::error::$spec has slides that overflow. Shorten the text."; exit 1
+            fi
+            mkdir -p "$folder"
+            cp "$out/$name.pdf" "$folder/carousel.pdf"
+            cp "$out/$name-01.png" "$folder/cover.png"
+            # turn off rebuild so the next push does not overwrite a published carousel
+            python3 - "$spec" <<'EOF'
+          import json, sys
+          p = sys.argv[1]; s = json.load(open(p))
+          if s.pop("rebuild", None) is not None:
+              open(p, "w").write(json.dumps(s, indent=1, ensure_ascii=False) + "\n")
+          EOF
+            echo "Built $folder"
+          done
+
+      - name: Commit and publish
+        if: steps.todo.outputs.specs != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898333+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet && { echo "Nothing to commit"; exit 0; }
+          git commit -m "Build carousels"
+          git push
+          # pushes made with the workflow token may not start a Pages build on their own
+          gh api -X POST "repos/${{ github.repository }}/pages/builds" || true
