@@ -81,6 +81,17 @@
       ]
     },
     {
+      "type": "text",
+      "cmd": "cat cheatsheet.txt",
+      "title": "Cheat sheet: scope alerts in Wireshark",
+      "bullets": [
+        "Only the alerted IPs: `ip.addr in {<alert IPs>}`",
+        "Who talked to them: Statistics → Conversations → IPv4, with \"Limit to display filter\"",
+        "Proof by zero: add `&& !(ip.addr == <host>)`. Expect Displayed: 0",
+        "Check known-good traffic (here: Windows Update) and exclude it before you go on"
+      ]
+    },
+    {
       "type": "end",
       "cmd": "next",
       "title": "Part 2: who is the user?",
@@ -89,5 +100,6 @@
       ],
       "link": "github.com/dancemonk/malware-traffic-analysis"
     }
-  ]
+  ],
+  "rebuild": true
 }
