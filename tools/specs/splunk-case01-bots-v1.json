@@ -1,0 +1,228 @@
+{
+ "name": "splunk-case01-bots-v1",
+ "accent": "#5EC8E5",
+ "series": "SIEM \u00b7 Splunk \u00b7 BOTS v1",
+ "footer": "Vlad Guliakin  \u00b7  github.com/dancemonk/siem-splunk-lab",
+ "base_dir": "siem-splunk-lab",
+ "slides": [
+  {
+   "type": "cover",
+   "kicker": "Case 01 \u00b7 Boss of the SOC v1",
+   "title": "A defaced website. 45 minutes. I traced each step in Splunk.",
+   "sub": "Web, Sysmon, Windows and firewall logs in one timeline. Then a detection for the next one."
+  },
+  {
+   "type": "text",
+   "title": "The alert: the website shows a defacement page",
+   "bullets": [
+    "**H1:** an admin changed the page. Expect an internal IP and no attack before it.",
+    "**H2:** an outsider got in. Expect attack attempts from an external IP, then a request that works.",
+    "Test both in `iis`, `stream:http` and `suricata`."
+   ]
+  },
+  {
+   "title": "412 passwords, then a browser",
+   "body": [
+    "A Python script brute-forced the Joomla admin login and hit `batman` at 21:46:33.",
+    "92 seconds later, Internet Explorer on a **second IP** logged in with it."
+   ],
+   "image": "cases/01-bots-v1/exhibits/w07-batman-time-order-hl.png",
+   "crops": [
+    [
+     0,
+     95,
+     1300,
+     350
+    ],
+    [
+     0,
+     590,
+     1300,
+     805
+    ]
+   ]
+  },
+  {
+   "title": "The firewall saw it and let it through",
+   "body": [
+    "21:52:45: FortiGate detects `W32/Swrort.C!tr` in `3791.exe`, with `action=monitored`.",
+    "2 seconds later: \"Upload successful\" for `3791.exe` and the web shell `agent.php`."
+   ],
+   "image": "cases/01-bots-v1/exhibits/w17-firewall-alert-and-upload-hl.png",
+   "crops": [
+    [
+     870,
+     640,
+     2050,
+     870
+    ],
+    [
+     870,
+     1315,
+     2050,
+     1395
+    ],
+    [
+     870,
+     1790,
+     2050,
+     1885
+    ]
+   ]
+  },
+  {
+   "title": "17 commands through a web shell",
+   "body": [
+    "Sysmon shows `php-cgi.exe` starting `cmd.exe` 17 times: a test `echo`, `dir`, then `3791.exe`, then two `move` commands."
+   ],
+   "image": "cases/01-bots-v1/exhibits/w12-webshell-commands-hl.png",
+   "crops": [
+    [
+     0,
+     90,
+     1500,
+     300
+    ],
+    [
+     0,
+     530,
+     1500,
+     1660
+    ]
+   ]
+  },
+  {
+   "title": "A reverse shell the firewall allowed",
+   "body": [
+    "`3791.exe` (VirusTotal 63/68) connected back to 23.22.63[.]114 on port 3791.",
+    "It stayed open about 26 minutes."
+   ],
+   "image": "cases/01-bots-v1/exhibits/w15-reverse-shell-hl.png",
+   "crops": [
+    [
+     20,
+     105,
+     1030,
+     190
+    ],
+    [
+     0,
+     455,
+     920,
+     585
+    ],
+    [
+     1030,
+     455,
+     2046,
+     585
+    ]
+   ]
+  },
+  {
+   "title": "The download I almost missed",
+   "body": [
+    "My field search on `src_ip` and `dest_ip` found two failed downloads on port 1337.",
+    "The third one worked, but its event had **no IPs and no URL**. A plain keyword search for `1337` found it."
+   ],
+   "image": "cases/01-bots-v1/exhibits/w32b-third-download-stream-hl.png",
+   "crops": [
+    [
+     20,
+     85,
+     1320,
+     160
+    ],
+    [
+     0,
+     400,
+     1190,
+     620
+    ],
+    [
+     1190,
+     400,
+     1770,
+     620
+    ]
+   ]
+  },
+  {
+   "title": "The defacement",
+   "body": [
+    "22:20:33: `move 2.jpeg imnotbatman.jpg` replaces the site's image.",
+    "22:21:19: the attacker loads it. Status 200."
+   ],
+   "image": "cases/01-bots-v1/exhibits/w30-imnotbatman-iis-hl.png",
+   "crops": [
+    [
+     10,
+     95,
+     940,
+     230
+    ],
+    [
+     0,
+     495,
+     1430,
+     545
+    ],
+    [
+     0,
+     1318,
+     1430,
+     1385
+    ]
+   ]
+  },
+  {
+   "title": "The detection: a web server should not start a shell",
+   "body": [
+    "IIS or PHP starting `cmd.exe` or `powershell.exe`.",
+    "On BOTS v1: 17 events, one alert row for `we1149srv`. Before the attack: 0."
+   ],
+   "image": "detections/exhibits/d01-alert-version-2x.png",
+   "crops": [
+    [
+     10,
+     65,
+     780,
+     175
+    ],
+    [
+     0,
+     460,
+     1290,
+     610
+    ],
+    [
+     1290,
+     460,
+     2060,
+     860
+    ]
+   ]
+  },
+  {
+   "type": "text",
+   "title": "Verdict: true positive, H2. Escalated as Critical.",
+   "bullets": [
+    "**First action** in my handover note: switch the firewall profile from monitor to block",
+    "**Isolate** we1149srv and block both attacker IPs",
+    "**Reset** the Joomla admin password and add MFA",
+    "**Egress filtering:** a web server has no reason to call out on 3791 or 1337"
+   ]
+  },
+  {
+   "type": "end",
+   "title": "What I took from it",
+   "bullets": [
+    "An event with empty fields is invisible to a field search. Search a plain keyword before you write \"not in the logs\".",
+    "Three log sources agreed within 1 to 2 seconds. That is what high confidence looks like.",
+    "Monitor mode detects. It does not protect."
+   ],
+   "note": "Case report with a 23-row timeline, ticket, handover note and the SPL detection:",
+   "link": "github.com/dancemonk/siem-splunk-lab"
+  }
+ ]
+}
