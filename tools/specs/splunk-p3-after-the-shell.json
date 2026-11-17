@@ -1,0 +1,240 @@
+{
+  "name": "splunk-p3-after-the-shell",
+  "folder": "2026-12-splunk-p3-after-the-shell",
+  "title": "Splunk Case 01, Part 3: after the shell",
+  "style": "terminal",
+  "prompt": "siem",
+  "accent": "#5EC8E5",
+  "series": "part 3/4",
+  "footer": "Vlad Guliakin · github.com/dancemonk/siem-splunk-lab",
+  "base_dir": "siem-splunk-lab/cases/01-bots-v1/exhibits",
+  "slides": [
+    {
+      "type": "cover",
+      "ascii": "3791",
+      "kicker": "case 01 · boss of the soc v1",
+      "title": "The web shell ran one program. That program opened a second shell.",
+      "sub": "What the attacker did on the web server, from Sysmon and IIS logs plus a VirusTotal hash search. Boss of the SOC v1 practice dataset."
+    },
+    {
+      "type": "step",
+      "cmd": "EventCode=1 Image=\"*cmd.exe\" ParentImage=\"*php-cgi.exe\"",
+      "title": "The web shell's first commands",
+      "body": [
+        "21:55:22: echo 24365, a test, in the same second as the first agent.php request. Then dir, ls and ifconfig. ls and ifconfig are Linux commands that fail on Windows: the attacker or their tool did not check the OS first."
+      ],
+      "image": "w12-webshell-commands-hl.png",
+      "crops": [
+        [
+          663,
+          609,
+          1408,
+          665
+        ],
+        [
+          663,
+          736,
+          1408,
+          793
+        ],
+        [
+          663,
+          801,
+          1408,
+          857
+        ],
+        [
+          663,
+          865,
+          1408,
+          921
+        ]
+      ],
+      "window": "splunk · sysmon eventcode 1",
+      "caption": "2&gt;&amp;1 is 2>&1 in HTML escaping. 17 web shell commands in all: my Dec 18 post turns them into a detection."
+    },
+    {
+      "type": "step",
+      "cmd": "3791.exe EventCode=1 | rex field=Hashes \"SHA256=...\"",
+      "title": "21:56:18: the web shell ran 3791.exe",
+      "body": [
+        "It sat in the website folder. On VirusTotal (checked Nov 14), 63 of 68 vendors flag its hash. Its first known name is ab.exe. ApacheBench (ab.exe) is the default template of Metasploit msfvenom, so this is a trojanized copy."
+      ],
+      "image": "w14c-3791-virustotal-hl.png",
+      "crops": [
+        [
+          489,
+          86,
+          1219,
+          161
+        ],
+        [
+          494,
+          267,
+          736,
+          320
+        ]
+      ],
+      "window": "virustotal · hash search only",
+      "caption": "Very likely a Metasploit payload that gives the attacker a command shell."
+    },
+    {
+      "type": "step",
+      "cmd": "3791.exe EventCode=3",
+      "title": "One second later, it connected out",
+      "body": [
+        "21:56:19: the web server opened a connection to 23.22.63[.]114 on port 3791, the same number as the file name. The same IP ran the brute force and the web shell."
+      ],
+      "image": "w15-reverse-shell-hl.png",
+      "crops": [
+        [
+          0,
+          525,
+          306,
+          583
+        ],
+        [
+          714,
+          525,
+          918,
+          583
+        ],
+        [
+          1306,
+          525,
+          1413,
+          583
+        ],
+        [
+          1423,
+          525,
+          1928,
+          583
+        ]
+      ],
+      "window": "splunk · sysmon eventcode 3",
+      "caption": "A reverse shell: the server connects to the attacker, not the other way around."
+    },
+    {
+      "type": "step",
+      "cmd": "ParentImage=\"*cmd.exe\" User=\"*IUSR\"",
+      "title": "What the attacker typed in the reverse shell",
+      "body": [
+        "21:58:28 to 21:59:12: who am I, which users, shares and sessions exist, is there a domain. net user had no /add: it only listed the users."
+      ],
+      "image": "w29-reverse-shell-commands-hl.png",
+      "crops": [
+        [
+          1293,
+          629,
+          1717,
+          678
+        ],
+        [
+          1293,
+          733,
+          1717,
+          782
+        ],
+        [
+          1293,
+          837,
+          1717,
+          886
+        ],
+        [
+          1293,
+          1046,
+          1717,
+          1095
+        ],
+        [
+          1293,
+          1150,
+          1717,
+          1199
+        ]
+      ],
+      "window": "splunk · sysmon eventcode 1",
+      "caption": "None of these are among the 17 web shell commands. They came right after 3791.exe started cmd.exe."
+    },
+    {
+      "type": "text",
+      "cmd": "EventCode IN (1, 3) host=we1149srv",
+      "title": "Two shells, three process trails",
+      "bullets": [
+        "Web shell: php-cgi.exe starts cmd.exe. 17 commands.",
+        "Reverse shell: 3791.exe starts cmd.exe. Discovery, then ping and nslookup for the attacker's own server.",
+        "The image download: php-cgi.exe connected out itself. No cmd.exe at all.",
+        "A search on one parent process follows only one of the three trails."
+      ]
+    },
+    {
+      "type": "step",
+      "cmd": "table _time CommandLine | sort _time",
+      "title": "22:20:33: the defacement was two move commands",
+      "body": [
+        "The image came from the attacker's server on port 1337, on the third try (a later post). Then the web shell renamed it to imnotbatman.jpg, the name the website uses."
+      ],
+      "image": "w12-webshell-commands-hl.png",
+      "crops": [
+        [
+          0,
+          1376,
+          306,
+          1432
+        ],
+        [
+          663,
+          1376,
+          1408,
+          1432
+        ],
+        [
+          0,
+          1503,
+          306,
+          1560
+        ],
+        [
+          663,
+          1503,
+          1408,
+          1560
+        ]
+      ],
+      "window": "splunk · sysmon eventcode 1",
+      "caption": "22:21:19: the attacker's scanner IP loaded imnotbatman.jpg to check it. Status 200."
+    },
+    {
+      "type": "text",
+      "cmd": "stats count by User",
+      "title": "IUSR the whole time",
+      "bullets": [
+        "Every process the attacker started, from the web shell or 3791.exe, ran as NT AUTHORITY\\IUSR, the IIS account for anonymous visitors.",
+        "No process ran as an administrator or SYSTEM. net user had no /add.",
+        "SYSTEM and NETWORK SERVICE rows in that window were WMI. The app pool row was IIS starting PHP."
+      ]
+    },
+    {
+      "type": "text",
+      "cmd": "cat cheatsheet.spl",
+      "title": "Cheat sheet: what ran on the host",
+      "bullets": [
+        "Start every search with: `index=botsv1 earliest=0 sourcetype=XmlWinEventLog`",
+        "What the web server started: `EventCode=1 (ParentImage=\"*w3wp.exe\" OR ParentImage=\"*php-cgi.exe\") | stats count by ParentImage, Image`",
+        "Commands under one parent: `EventCode=1 ParentImage=\"*<parent>\" | table _time CommandLine | sort _time`",
+        "Where a program connected: `EventCode=3 Image=\"*<file>\" | table _time DestinationIp DestinationPort`"
+      ]
+    },
+    {
+      "type": "end",
+      "cmd": "next",
+      "title": "Part 4: closing the case",
+      "body": [
+        "How the reverse shell ended, the verdict, the ticket and the handover note."
+      ],
+      "link": "github.com/dancemonk/siem-splunk-lab"
+    }
+  ]
+}
