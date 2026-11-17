@@ -1,0 +1,99 @@
+{
+  "name": "splunk-cheatsheet-case01",
+  "folder": "2026-12-splunk-cheatsheet-case01",
+  "title": "Splunk cheat sheet: a web server attack, search by search",
+  "style": "terminal",
+  "prompt": "siem",
+  "accent": "#5EC8E5",
+  "series": "cheat sheet",
+  "footer": "Vlad Guliakin · github.com/dancemonk/siem-splunk-lab",
+  "base_dir": "siem-splunk-lab/cases/01-bots-v1/exhibits",
+  "slides": [
+    {
+      "type": "cover",
+      "ascii": "SPL",
+      "kicker": "case 01 · boss of the soc v1",
+      "title": "The main Splunk searches from my web server case, on one sheet.",
+      "sub": "Scan, brute force, web shell, reverse shell, defacement. Built on the Boss of the SOC v1 practice dataset. Save it for your next web server alert."
+    },
+    {
+      "type": "text",
+      "cmd": "cat 00-before.spl",
+      "title": "Before the first search",
+      "bullets": [
+        "What data is there: `| tstats count where index=botsv1 by sourcetype`",
+        "Start every search with `index=botsv1 earliest=0` (the data is from 2016).",
+        "Field names change per log: `src_ip` (stream:http), `SourceIp` (Sysmon), `srcip` (FortiGate). Check before you filter.",
+        "Sysmon searches also need `sourcetype=XmlWinEventLog` (the add-on renames it)."
+      ]
+    },
+    {
+      "type": "text",
+      "cmd": "cat 01-who.spl",
+      "title": "Who is hitting the website?",
+      "bullets": [
+        "Loudest sources: `sourcetype=stream:http <site> | stats count by src_ip | sort - count`",
+        "As what tool: `| stats count by src_ip, http_user_agent`",
+        "What one IP hit: `sourcetype=stream:http src_ip=<ip> | stats count by http_method, uri_path`"
+      ]
+    },
+    {
+      "type": "text",
+      "cmd": "cat 02-bruteforce.spl",
+      "title": "Which password worked?",
+      "bullets": [
+        "A password sent twice: `http_method=POST | rex field=form_data \"passwd=(?<password>[^&]+)\" | stats count, values(src_ip) by password | where count > 1`",
+        "Status 303 is a redirect, not proof of a login. Check what the IP did next."
+      ]
+    },
+    {
+      "type": "text",
+      "cmd": "cat 03-foothold.spl",
+      "title": "What was uploaded, and who used it?",
+      "bullets": [
+        "After the login: `sourcetype=stream:http src_ip=<ip> http_user_agent=\"*Trident*\" | table _time http_method uri_path status | sort 0 _time`",
+        "Uploads with a file name: `http_method=POST part_filename=* | table _time src_ip part_filename` (it missed one upload in my case)",
+        "So also search the file name in web, firewall, IDS: `<file> sourcetype IN (\"stream:http\", \"fgt_utm\", \"suricata\") | sort _time`"
+      ]
+    },
+    {
+      "type": "text",
+      "cmd": "cat 04-host.spl",
+      "title": "What ran on the server? (Sysmon)",
+      "bullets": [
+        "Children of the web server: `EventCode=1 (ParentImage=\"*w3wp.exe\" OR ParentImage=\"*php-cgi.exe\") | stats count by ParentImage, Image`",
+        "Commands under one parent: `EventCode=1 ParentImage=\"*<parent>\" | table _time CommandLine`",
+        "Where a program connected: `EventCode=3 Image=\"*<file>\" | table _time DestinationIp DestinationPort`",
+        "Which account: `EventCode=1 host=<host> | stats count by User, Image`"
+      ]
+    },
+    {
+      "type": "text",
+      "cmd": "cat 05-firewall.spl",
+      "title": "What did the firewall see, and when?",
+      "bullets": [
+        "One connection: `sourcetype=fgt_traffic dstip=<ip> dstport=<port> | table _time srcip action sentbyte rcvdbyte duration`",
+        "FortiGate logs a connection when it ends. Start time = _time minus duration.",
+        "Bursts per minute: `| bin _time span=1m | stats count by _time`. head before sort keeps only the newest events: sort first."
+      ]
+    },
+    {
+      "type": "text",
+      "cmd": "cat 06-nothing-found.md",
+      "title": "When a search finds nothing",
+      "bullets": [
+        "A field search can't match an empty field. My search by src_ip missed a download that had no IPs in its event.",
+        "Before you write \"not in the logs\", run a plain keyword search too."
+      ]
+    },
+    {
+      "type": "end",
+      "cmd": "next",
+      "title": "Part 4 on Jan 13: closing the case",
+      "body": [
+        "The verdict, the ticket and the handover note. The full searches, with results, are in the worklog."
+      ],
+      "link": "github.com/dancemonk/siem-splunk-lab"
+    }
+  ]
+}
