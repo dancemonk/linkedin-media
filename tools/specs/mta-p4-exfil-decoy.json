@@ -1,0 +1,173 @@
+{
+  "name": "mta-p4-exfil-decoy",
+  "folder": "2026-12-mta-p4-exfil-decoy",
+  "title": "Malware traffic analysis, Part 4: exfil and the decoy",
+  "style": "terminal",
+  "prompt": "malware",
+  "accent": "#F5B83D",
+  "series": "part 4/4",
+  "footer": "Vlad Guliakin · github.com/dancemonk/malware-traffic-analysis",
+  "base_dir": "malware-traffic-analysis/2026-08-09-first-to-last/screenshots",
+  "slides": [
+    {
+      "type": "cover",
+      "ascii": "EXFIL",
+      "kicker": "formbook/xloader · first to last pcap",
+      "title": "14 domains blocked. One marked \"do not block\".",
+      "sub": "Part 4: what the host sent, the decoy, and what went into the ticket. FormBook/XLoader in an exercise pcap from malware-traffic-analysis.net."
+    },
+    {
+      "type": "step",
+      "cmd": "http.request.method == \"POST\" && ip.src == <host>",
+      "title": "Seven POSTs per visit, the same total every time",
+      "body": [
+        "909 + 3,225 + 2,305 + 69,101 + 69,181 + 69,165 + 69,201 = 283,087 bytes per visit. 14 domains, 16 visits (two domains twice): about 4.5 MB."
+      ],
+      "image": "14-post-sizes.png",
+      "crops": [
+        [
+          0,
+          0,
+          410,
+          28
+        ],
+        [
+          450,
+          36,
+          755,
+          185
+        ]
+      ],
+      "window": "wireshark · content-length column",
+      "caption": "Content-Length, not the Length column. Why: my Dec 11 post."
+    },
+    {
+      "type": "step",
+      "cmd": "follow http stream",
+      "title": "Inside each POST: one encoded value",
+      "body": [
+        "The body is a single 2kn1= value. I couldn't decode it from the capture, so the write-up says likely exfiltration, not what was stolen."
+      ],
+      "image": "15-post-body.png",
+      "crops": [
+        [
+          0,
+          14,
+          240,
+          34
+        ],
+        [
+          0,
+          153,
+          240,
+          170
+        ],
+        [
+          0,
+          232,
+          640,
+          353
+        ],
+        [
+          0,
+          355,
+          220,
+          378
+        ]
+      ],
+      "window": "wireshark · frame 11227",
+      "caption": "Each domain visited once sent back only 14 to 19 KB."
+    },
+    {
+      "type": "step",
+      "cmd": "ip.addr == 172.64.155.76 && http",
+      "title": "The 15th domain answered like a real website",
+      "body": [
+        "www.independent[.]ie got the same C2 pattern but only one 217-byte POST. It replied 301 to HTTPS from Cloudflare: a real Irish news site, registered in 2001, used as a decoy."
+      ],
+      "image": "12-decoy.png",
+      "crops": [
+        [
+          0,
+          0,
+          255,
+          28
+        ],
+        [
+          890,
+          70,
+          1190,
+          88
+        ],
+        [
+          35,
+          327,
+          470,
+          347
+        ],
+        [
+          35,
+          379,
+          250,
+          396
+        ]
+      ],
+      "window": "wireshark · decoy",
+      "caption": "FormBook/XLoader hides its real C2 server among decoy domains."
+    },
+    {
+      "type": "text",
+      "cmd": "cat enrichment.md",
+      "title": "C2 or decoy? For 14 domains I can't say.",
+      "bullets": [
+        "13 were registered 72 to 156 days before the incident. Whois gave no date for the 14th.",
+        "VirusTotal flagged 12 of the 14. ThreatFox listed none (checked 2026-10-31).",
+        "Without the malware's config, the real C2 can't be told apart from the decoys. All 14 stay \"C2 or decoy (unconfirmed)\".",
+        "www.taibeinan[.]cc, the exception from Part 3: 200 JSON, 500, 502 and 499 through a CDN, plus a 156 KB Chinese 404 page. It looked real, but was registered within a day of three other C2-pattern domains."
+      ]
+    },
+    {
+      "type": "text",
+      "cmd": "cat ticket.md",
+      "title": "What went into the ticket",
+      "bullets": [
+        "Verdict: true positive, high confidence.",
+        "Contain: isolate DESKTOP-5NLV63K, reset rvance's passwords (browser ones too), reimage the host.",
+        "Block: the 14 suspicious domains at proxy and DNS, and the non-CDN IPs at the firewall.",
+        "Do not block: www.independent[.]ie, the Cloudflare IPs or taibeinan's CDN IP. Many legitimate sites share them.",
+        "Hunt: the fake User-Agent and the URI pattern on every other host."
+      ]
+    },
+    {
+      "type": "text",
+      "cmd": "cat lessons.md",
+      "title": "Four things this case taught me",
+      "bullets": [
+        "Measure intervals, don't estimate them. The alerts suggested one minute, the delta column showed 24 s.",
+        "Pivot on behavior. The alerts covered 6 of 15 domains.",
+        "Use http.content_length for POST sizes.",
+        "Finish enrichment before you name a domain decoy or C2."
+      ]
+    },
+    {
+      "type": "text",
+      "cmd": "cat cheatsheet.txt",
+      "title": "Cheat sheet: exfil and decoys",
+      "bullets": [
+        "POST sizes: `http.request.method == \"POST\" && ip.src == <host>`, plus an `http.content_length` column",
+        "How one server answers: `ip.addr == <ip> && http`, then Follow HTTP Stream",
+        "Proxy hunt for this sample: User-Agent `Windows NT 6.2; rv:39.0`, URI path `^/[a-z0-9]{4}/` with `2kn1=`",
+        "Shared CDN IP? Block the domain, not the IP."
+      ]
+    },
+    {
+      "type": "end",
+      "cmd": "exit",
+      "title": "That's the whole case",
+      "body": [
+        "Scope, user, behavior, exfil. The write-up has every filter, frame number and IOC."
+      ],
+      "link": "github.com/dancemonk/malware-traffic-analysis"
+    }
+  ]
+}
