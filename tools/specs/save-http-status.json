@@ -1,0 +1,51 @@
+{
+  "name": "save-http-status",
+  "folder": "2027-01-save-http-status",
+  "title": "HTTP status codes: what they meant in my cases",
+  "style": "terminal",
+  "prompt": "soc",
+  "accent": "#5EC8E5",
+  "series": "save this",
+  "footer": "Vlad Guliakin · github.com/dancemonk",
+  "base_dir": "siem-splunk-lab/cases/01-bots-v1/exhibits",
+  "slides": [
+    {
+      "type": "text",
+      "cmd": "stats count by status",
+      "title": "HTTP status: what I checked next",
+      "rows": [
+        [
+          "200",
+          "What came back, and who asked?",
+          "answered"
+        ],
+        [
+          "301",
+          "Where does Location point?",
+          "a decoy news site told the malware to use HTTPS"
+        ],
+        [
+          "303",
+          "What did that IP do after?",
+          "login redirect, worked or not"
+        ],
+        [
+          "404",
+          "Is the request pattern regular?",
+          "most C2-pattern servers said it, the malware kept going"
+        ],
+        [
+          "499 5xx",
+          "What sits in front?",
+          "499 is nginx's own 'client closed request' code"
+        ],
+        [
+          "(empty)",
+          "Bytes and duration?",
+          "two downloads that failed"
+        ]
+      ],
+      "tail": "From two practice cases: Splunk BOTS v1 and a malware pcap."
+    }
+  ]
+}

@@ -33,6 +33,9 @@ The case repos must sit next to `linkedin-media` (or set `REPOS_DIR`). Delete th
 | slide `ascii` | Cover only, terminal style: a short word shown as an ASCII banner |
 | slide `cmd` | Terminal style: the `$ ...` label above a slide title |
 | slide `window` | Terminal style: the label in the screenshot window bar |
+| slide `dense` | Text slide: `true` uses smaller text, for a one-image cheat card with 5-7 lines |
+| slide `rows` | Text slide as a table: `[[key, value, small note], ...]`. Key is big mono accent text. Best for one-image cheat cards (5-6 rows). `wide: true` gives the key column more room. |
+| slide `tail` | One gray line under the rows |
 | `\n` in any text | Forces a line break. Use it so long filters break at a space you choose, never inside a regex. |
 | `series`, `footer` | Small label at the top, name and repo at the bottom |
 | `base_dir` | Screenshot folder, starting with the case repo name (for example `siem-splunk-lab`) |

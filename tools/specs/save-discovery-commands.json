@@ -1,0 +1,52 @@
+{
+  "name": "save-discovery-commands",
+  "folder": "2027-01-save-discovery-commands",
+  "title": "Windows discovery commands and their ATT&CK IDs",
+  "style": "terminal",
+  "prompt": "siem",
+  "accent": "#5EC8E5",
+  "series": "save this",
+  "footer": "Vlad Guliakin · github.com/dancemonk/siem-splunk-lab",
+  "base_dir": "siem-splunk-lab/cases/01-bots-v1/exhibits",
+  "slides": [
+    {
+      "type": "text",
+      "cmd": "ParentImage=\"*cmd.exe\" User=\"*IUSR\"",
+      "title": "Discovery commands and ATT&CK IDs",
+      "wide": true,
+      "rows": [
+        [
+          "whoami",
+          "Who am I?",
+          "T1033"
+        ],
+        [
+          "net user",
+          "Which local users exist?",
+          "T1087.001"
+        ],
+        [
+          "net share",
+          "What does this host share?",
+          "T1135"
+        ],
+        [
+          "net session",
+          "Who is connected here?",
+          "T1049"
+        ],
+        [
+          "net view /domain",
+          "Which domains or workgroups exist?",
+          "T1018"
+        ],
+        [
+          "tasklist",
+          "What is running?",
+          "T1057"
+        ]
+      ],
+      "tail": "My case: all ran as IUSR, from cmd.exe shells that 3791.exe started."
+    }
+  ]
+}

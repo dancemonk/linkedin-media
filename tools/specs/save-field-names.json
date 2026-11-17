@@ -1,0 +1,47 @@
+{
+  "name": "save-field-names",
+  "folder": "2027-01-save-field-names",
+  "title": "Same IP, different field names: Splunk cheat card",
+  "style": "terminal",
+  "prompt": "siem",
+  "accent": "#5EC8E5",
+  "series": "save this",
+  "footer": "Vlad Guliakin · github.com/dancemonk/siem-splunk-lab",
+  "base_dir": "siem-splunk-lab/cases/01-bots-v1/exhibits",
+  "slides": [
+    {
+      "type": "text",
+      "cmd": "fieldsummary",
+      "title": "Same IP, different field names",
+      "wide": true,
+      "rows": [
+        [
+          "stream:http",
+          "`src_ip`  `dest_ip`",
+          "web traffic"
+        ],
+        [
+          "Sysmon",
+          "`SourceIp`  `DestinationIp`",
+          "XmlWinEventLog, raw field names"
+        ],
+        [
+          "FortiGate",
+          "`srcip`  `dstip`",
+          "fgt_traffic, fgt_utm"
+        ],
+        [
+          "IIS",
+          "`c_ip`  `s_ip`",
+          "web server log"
+        ],
+        [
+          "Suricata",
+          "`src_ip`  `dest_ip`",
+          "IDS"
+        ]
+      ],
+      "tail": "A filter on the wrong name can return nothing. Check the names in each log first."
+    }
+  ]
+}

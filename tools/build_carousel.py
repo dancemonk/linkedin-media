@@ -126,6 +126,16 @@ li:before { content: '>'; background: none; width: auto; height: auto; top: 0; c
 .slide.end .body p { font-size: 38px }
 .slide.end .link { font-size: 32px; margin-top: 40px }
 .slide.step .shot { justify-content: flex-start; margin-top: 44px }
+.slide.text.dense h1 { font-size: 60px; margin-bottom: 30px }
+.slide.text.dense li { font-size: 31px; line-height: 1.34; margin-bottom: 20px }
+.rows { margin-top: 8px; border-top: 2px solid #232A32 }
+.row { display: grid; grid-template-columns: 300px 1fr; gap: 28px; align-items: center; padding: 16px 0; border-bottom: 2px solid #232A32 }
+.row .k { font-family: 'DejaVu Sans Mono', monospace; font-size: 34px; font-weight: 700; color: var(--accent); line-height: 1.2 }
+.row .v { font-size: 30px; line-height: 1.3; color: #E6E9ED }
+.row .v small { display: block; font-size: 24px; color: #8B939C; margin-top: 4px }
+.rows.wide .row { grid-template-columns: 380px 1fr }
+.slide.text.card h1 { font-size: 72px; line-height: 1.05; margin-bottom: 34px }
+.slide .tail { font-size: 26px; line-height: 1.4; color: #8B939C; margin-top: 26px }
 """
 
 
@@ -161,12 +171,20 @@ def page(spec, s, i, n):
                  f'<h1>{inline(s["title"])}</h1><div class="sub">{inline(s.get("sub", ""))}</div>'
                  f'<div class="swipe">Swipe &rarr;</div>{foot}</div>')
     else:
-        parts = [f'<div class="slide {t}">', top]
+        dense = (" dense" if s.get("dense") else "") + (" card" if s.get("rows") else "")
+        parts = [f'<div class="slide {t}{dense}">', top]
         if s.get("cmd"):
             parts.append(f'<div class="cmd">$ {inline(s["cmd"])}</div>')
         parts.append(f'<h1>{inline(s["title"])}</h1>')
         if s.get("body"):
             parts.append('<div class="body">' + "".join(f"<p>{inline(p)}</p>" for p in s["body"]) + "</div>")
+        if s.get("rows"):
+            wide = " wide" if s.get("wide") else ""
+            parts.append(f'<div class="rows{wide}">' + "".join(
+                f'<div class="row"><div class="k">{inline(r[0])}</div><div class="v">{inline(r[1])}'
+                + (f'<small>{inline(r[2])}</small>' if len(r) > 2 else '') + '</div></div>' for r in s["rows"]) + "</div>")
+        if s.get("tail"):
+            parts.append(f'<div class="tail">{inline(s["tail"])}</div>')
         if s.get("bullets"):
             parts.append("<ul>" + "".join(f"<li>{inline(b)}</li>" for b in s["bullets"]) + "</ul>")
         if s.get("note"):
