@@ -123,7 +123,7 @@
         "13 were registered 72 to 156 days before the incident. Whois gave no date for the 14th.",
         "VirusTotal flagged 12 of the 14. ThreatFox listed none (checked 2026-10-31).",
         "Without the malware's config, the real C2 can't be told apart from the decoys. All 14 stay \"C2 or decoy (unconfirmed)\".",
-        "www.taibeinan[.]cc, the exception from Part 3: 200 JSON, 500, 502 and 499 through a CDN, plus a 156 KB Chinese 404 page. It looked real, but was registered within a day of three other C2-pattern domains."
+        "www.taibeinan[.]cc, the exception from Part 3, answered like a real website instead of 404. Why it still stays unconfirmed: my Dec 23 post."
       ]
     },
     {
@@ -169,5 +169,6 @@
       ],
       "link": "github.com/dancemonk/malware-traffic-analysis"
     }
-  ]
+  ],
+  "rebuild": true
 }
