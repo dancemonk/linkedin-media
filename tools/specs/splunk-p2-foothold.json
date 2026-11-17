@@ -1,0 +1,193 @@
+{
+  "name": "splunk-p2-foothold",
+  "folder": "2026-12-splunk-p2-foothold",
+  "title": "Splunk Case 01, Part 2: from login to web shell",
+  "style": "terminal",
+  "prompt": "siem",
+  "accent": "#5EC8E5",
+  "series": "part 2/4",
+  "footer": "Vlad Guliakin · github.com/dancemonk/siem-splunk-lab",
+  "base_dir": "siem-splunk-lab/cases/01-bots-v1/exhibits",
+  "slides": [
+    {
+      "type": "cover",
+      "ascii": "SHELL",
+      "kicker": "case 01 · boss of the soc v1",
+      "title": "From batman to a working web shell in 7 minutes.",
+      "sub": "The admin session, two uploads and the first web shell request, traced in Splunk on the Boss of the SOC v1 practice dataset."
+    },
+    {
+      "type": "step",
+      "cmd": "src_ip=<scanner> http_user_agent=\"*Trident*\"",
+      "title": "21:51:32: the browser opened eXtplorer",
+      "body": [
+        "eXtplorer is a file manager in the Joomla admin area. The browser loaded it, then used it to list files and upload (slide 4). Only a logged-in admin can do that, so the batman login worked."
+      ],
+      "image": "w08b-admin-session-extplorer-hl.png",
+      "crops": [
+        [
+          0,
+          70,
+          400,
+          135
+        ],
+        [
+          0,
+          288,
+          400,
+          346
+        ],
+        [
+          1150,
+          288,
+          1735,
+          346
+        ]
+      ],
+      "window": "splunk · stream:http",
+      "caption": "Filtered to the login IP and IE 11 (Trident). 3 min 27 s after the login."
+    },
+    {
+      "type": "step",
+      "cmd": "http_method=POST part_filename=*",
+      "title": "First try: agent.php through the Extension Installer",
+      "body": [
+        "21:50:31, a minute before eXtplorer. The server sent no success message, so this upload most likely failed."
+      ],
+      "image": "w09b-upload-agent-php-hl.png",
+      "crops": [
+        [
+          0,
+          500,
+          400,
+          630
+        ],
+        [
+          680,
+          570,
+          1150,
+          620
+        ],
+        [
+          1505,
+          570,
+          1720,
+          620
+        ]
+      ],
+      "window": "splunk · stream:http",
+      "caption": "This search found one upload. It did not show the one that worked."
+    },
+    {
+      "type": "step",
+      "cmd": "3791.exe sourcetype IN (\"stream:http\", \"fgt_utm\", \"suricata\")",
+      "title": "Second try at 21:52:47: Upload successful!",
+      "body": [
+        "eXtplorer sent two files at once: agent.php and 3791.exe, a program that Part 3 follows. The firewall flagged 3791.exe during this upload and still let it through. That gets its own post."
+      ],
+      "image": "w17-firewall-alert-and-upload-hl.png",
+      "crops": [
+        [
+          640,
+          1150,
+          860,
+          1215
+        ],
+        [
+          1560,
+          1335,
+          1960,
+          1380
+        ],
+        [
+          1315,
+          1375,
+          1715,
+          1418
+        ],
+        [
+          1460,
+          1775,
+          1960,
+          1820
+        ]
+      ],
+      "window": "splunk · stream:http",
+      "caption": "I found this upload with a keyword search for 3791.exe, not with the part_filename search."
+    },
+    {
+      "type": "step",
+      "cmd": "agent.php | stats count by src_ip, http_method, uri_path, _time",
+      "title": "21:55:22: the other IP starts using agent.php",
+      "body": [
+        "23.22.63[.]114, the IP that ran the brute force, sends GET requests to the web shell, a few per second."
+      ],
+      "image": "w10-webshell-used-hl.png",
+      "crops": [
+        [
+          0,
+          630,
+          320,
+          688
+        ],
+        [
+          690,
+          630,
+          960,
+          688
+        ],
+        [
+          1320,
+          630,
+          1700,
+          688
+        ]
+      ],
+      "window": "splunk · stream:http",
+      "caption": "One attacker, two IPs: one uploaded the shell, the other used it."
+    },
+    {
+      "type": "text",
+      "cmd": "open event 22:21:34",
+      "title": "Plain GET requests, commands in the headers",
+      "bullets": [
+        "The URL is only /joomla/agent.php. The commands travel in the Referer and Accept-Language headers.",
+        "In one request (22:21:34): a fake Google Referer, a fake Safari User-Agent and a strange Accept-Language, `it-CH,pa;q=0.5,ps;q=0.7,pa;q=0.8`.",
+        "The reply is encoded, between tags that match a key in the agent.php code.",
+        "So the URL alone shows no command. The headers do."
+      ]
+    },
+    {
+      "type": "text",
+      "cmd": "sort _time",
+      "title": "Login to web shell: 7 min 17 s",
+      "bullets": [
+        "21:48:05 40.80.148[.]42 logs in with batman (Internet Explorer 11)",
+        "21:50:31 first agent.php upload, Extension Installer (most likely failed)",
+        "21:51:32 eXtplorer opens",
+        "21:52:47 agent.php and 3791.exe uploaded: Upload successful!",
+        "21:55:22 23.22.63[.]114 uses agent.php"
+      ]
+    },
+    {
+      "type": "text",
+      "cmd": "cat cheatsheet.spl",
+      "title": "Cheat sheet: login to shell",
+      "bullets": [
+        "Did the login work? See the next requests: `sourcetype=stream:http src_ip=<ip> | table _time http_method uri_path status | sort _time`",
+        "Uploads with a file name (it missed one): `sourcetype=stream:http http_method=POST part_filename=* | table _time src_ip part_filename`",
+        "One file in web, firewall, IDS: `<file> sourcetype IN (\"stream:http\", \"fgt_utm\", \"suricata\") | sort _time`",
+        "A field search misses events with empty fields. Also search the plain file name."
+      ]
+    },
+    {
+      "type": "end",
+      "cmd": "next",
+      "title": "Part 3: after the shell",
+      "body": [
+        "What agent.php ran on the server, the reverse shell, and how the website's image was replaced."
+      ],
+      "link": "github.com/dancemonk/siem-splunk-lab"
+    }
+  ]
+}
