@@ -1,0 +1,68 @@
+{
+  "name": "splunk-firewall-monitored",
+  "folder": "2026-12-splunk-firewall-monitored",
+  "title": "The firewall flagged 3791.exe and let it through",
+  "style": "terminal",
+  "prompt": "siem",
+  "accent": "#5EC8E5",
+  "series": "case 01",
+  "footer": "Vlad Guliakin · github.com/dancemonk/siem-splunk-lab",
+  "base_dir": "siem-splunk-lab/cases/01-bots-v1/exhibits",
+  "slides": [
+    {
+      "type": "step",
+      "cmd": "3791.exe sourcetype IN (\"fgt_utm\", \"stream:http\")",
+      "title": "action=monitored: the firewall saw the malware and let it through",
+      "body": [
+        "FortiGate log at 21:52:45, web server reply at 21:52:47. Splunk, Boss of the SOC v1 practice dataset."
+      ],
+      "image": "w17-firewall-alert-and-upload-hl.png",
+      "crops": [
+        [
+          647,
+          670,
+          855,
+          742
+        ],
+        [
+          1288,
+          747,
+          1860,
+          778
+        ],
+        [
+          1722,
+          824,
+          1995,
+          860
+        ],
+        [
+          1098,
+          863,
+          1440,
+          899
+        ],
+        [
+          1312,
+          942,
+          1680,
+          982
+        ],
+        [
+          645,
+          1169,
+          851,
+          1215
+        ],
+        [
+          1462,
+          1777,
+          1900,
+          1818
+        ]
+      ],
+      "window": "splunk · fgt_utm + stream:http",
+      "caption": "9:52 PM = 21:52 UTC"
+    }
+  ]
+}
